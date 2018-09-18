@@ -1,0 +1,19 @@
+{
+  "name": "node-worker",
+  "description": "the node multi-worker moudle.",
+  "version": "1.0.0",
+  "author": "page",
+  "main": "./index",
+  "directories": {
+    "lib": "."
+  },
+  "scripts": {
+    "_preinstall": "make"
+  },
+  "dependencies": {
+    "bluebird": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=4.0.0"
+  }
+}
