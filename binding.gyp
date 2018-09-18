@@ -2,7 +2,7 @@
   "targets": [
     {
       "target_name": "node-worker",
-      "sources": [ "worker.cpp", "client.cpp","main.cpp"]
+      "sources": [ "src/worker.cpp", "src/client.cpp","src/main.cpp"]
     }
   ],
   'cflags': [
