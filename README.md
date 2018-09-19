@@ -20,4 +20,35 @@ the node multi-worker moudle
 	    console.log(err);
 	});
 	
-这样会阻塞一段时间的任务。现阶段分配任务的方式是（任务数%进程数）的方式分配，暂时不支持闲时抢占任务的形式。还有现阶段在子进程中传输数据时使用JSON.stringify的时候，如果需要stringify的数据过大，则无法解析。
+这样会阻塞一段时间的任务。现阶段分配任务的方式是（任务数%进程数）的方式分配，暂时不支持闲时抢占任务的形式。虽然可以一次性在子进程中做大量的循环，但是建议拆分循环到不同的子进程中然后汇总结果例如：
+
+	var mgWorker = require('node-worker');
+	var Promise = require('bluebird');
+	mgWorker.tasks("task",{loop:function(data){
+		var str = "";
+		for(var i = data.index * data.length;i < (data.index + 1);i++){
+			str += i;
+		}
+		return str;
+	}})
+	var worker = new mgWorker();
+	var arr = [worker.task.loop({
+    	length: 1000,
+    	index:0
+	}),worker.task.loop({
+    	length: 1000,
+    	index:1
+	}),worker.task.loop({
+    	length: 1000,
+    	index:2
+	}),worker.task.loop({
+    	length: 1000,
+    	index:3
+	}),worker.task.loop({
+    	length: 1000,
+    	index:4
+	})]
+	Promise.all(arr).then(function(str){
+    	console.log(str.join(""));
+	})
+这样可以充分的利用多worker的性能。

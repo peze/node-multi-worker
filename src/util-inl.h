@@ -111,10 +111,9 @@ inline std::string json_str(Isolate* isolate, Local<Value> value) {
 //    }
     HandleScope scope(isolate);
     Local<Context> context = isolate->GetCurrentContext();
-
     Local<Value> result = JSON::Stringify(context,Local<Object>::Cast(value)).ToLocalChecked();
     String::Utf8Value const str(result);
-    return std::string(*str, str.length());
+    return std::string(*str);
 }
 
 inline bool read_finish(const char* str,char key){

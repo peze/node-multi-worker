@@ -339,7 +339,7 @@ void setup_workers() {
     uv_cpu_info_t *info;
     uv_cpu_info(&info, &cpu_count);
     uv_free_cpu_info(info, cpu_count);
-    cpu_count =  cpu_count * 2;
+    cpu_count = cpu_count * 2;
     child_worker_count = cpu_count;
 
     workers = (child_worker*) calloc(sizeof(struct child_worker), cpu_count);

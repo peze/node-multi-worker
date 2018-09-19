@@ -35,6 +35,7 @@ mgWorker.tasks("loop",{a:function(data){
         for(var i = 1;i < data.length;i++){
             str.push({a:3,b:4});
         }
+
         return str;
     },c:function(data){
         var str = [];
@@ -47,7 +48,7 @@ var worker = new mgWorker();
 
 
 worker.loop.a({
-    length: 8000
+    length:8000
 }).then(function (data) {
     console.log(data);
 }).catch(function(err){
