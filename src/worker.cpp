@@ -26,10 +26,10 @@ void handle_signal(int signo)
         sigaddset(&setmask,SIGCHLD);
         sigset_t old_set;
         sigprocmask(SIG_BLOCK,&setmask,&old_set);
-        fprintf(stderr, "Stop workers\n");
+        fprintf(stderr, "Stop workers \n");
         kill(0,SIGKILL);
 
-//        sigprocmask(SIG_SETMASK,&old_set,NULL); 不解除信号屏蔽退出
+//        sigprocmask(SIG_SETMASK,&old_set,NULL); //不解除信号屏蔽退出
 //        _exit(127);
     }
 }
@@ -222,7 +222,7 @@ void check_parent_exist(uv_timer_t *handle) {
 
 void check_master_parent_exist(uv_timer_t *handle) {
     int parent_id = getppid();
-    if(parent_id != reactor_pid){
+    if(parent_id != main_pid){
         kill(getpid(),SIGINT);
     }
 }
@@ -382,9 +382,6 @@ void start_tasks(sem_t *pwsem){
     loop = uv_default_loop();
     uv_loop_init(loop);
     reactor_pid = getpid();
-    signal(SIGCHLD,  &sig_child);
-    signal(SIGINT, handle_signal);
-    signal(SIGSTOP, handle_signal);
     uv_timer_t *checker = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     uv_timer_init(loop, checker);
     uv_timer_start(checker, check_master_parent_exist, FIRST_PARENT_CHECK_TIME, REPEAT_PARENT_CHECK_TIME);
@@ -407,10 +404,20 @@ void start_tasks(sem_t *pwsem){
         return;
     }
     setup_workers();
+    signal(SIGCHLD,  &sig_child);
+//    struct sigaction sa;
+//    struct sigaction old_signal_handler;
+//    sa.sa_sigaction = handle_signal;
+//    sigemptyset(&sa.sa_mask);
+//    sa.sa_flags = SA_RESTART | SA_SIGINFO;
+//    sigaction(SIGINT, &sa, &old_signal_handler);
+    signal(SIGINT, handle_signal);
+    signal(SIGSTOP, handle_signal);
     begin_uv_run(loop);
 }
 
 void prepare_start_tasks(){
+    main_pid = getpid();
     int pid;
     sem_t *prsem;
     if((prsem = sem_open("mgw_sem",O_CREAT,0666,0)) == SEM_FAILED)
@@ -426,7 +433,6 @@ void prepare_start_tasks(){
             return;
         }
         start_tasks(pwsem);
-        main_pid = getppid();
     }else{
         if(sem_wait(prsem) < 0)
         {

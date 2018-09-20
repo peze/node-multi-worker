@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <map>
 #include <string>
-#include <sys/filio.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 
@@ -116,7 +116,7 @@ inline std::string json_str(Isolate* isolate, Local<Value> value) {
     return std::string(*str);
 }
 
-inline bool read_finish(const char* str,char key){
+inline bool read_finish(char* str,char key){
     char dem[8];
     dem[0] = key;
     memcpy(dem + 1,"split$",6);
