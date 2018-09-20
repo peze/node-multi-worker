@@ -9,6 +9,10 @@ var init = false;
 
 function taskCommonFunc (key){
     return function(data,callback){
+        if(typeof data == "function"){
+            callback = data;
+            data = {};
+        }
         client.send(key,data,callback)
     }
 }
