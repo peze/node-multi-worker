@@ -52,3 +52,5 @@ the node multi-worker moudle
     	console.log(str.join(""));
 	})
 这样可以充分的利用多worker的性能。
+
+不过目前仍然存在问题，在v8中没考虑过会被fork的情况，所以他的worker thread在主进程中被初始化了以后，不会调用pthread_atfork类似的方法来在子进程中重置初始化参数再重新启动worker thread（由此可见，v8其实就根本没想到你会fork他）。
