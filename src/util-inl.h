@@ -67,7 +67,7 @@ inline int get_from_father(char* parameter ,char* task_id,char key){
     char* tmp_str = strchr(parameter,key);
     char dem[8];
     dem[0] = key;
-    memcpy(dem + 1,"split$",6);
+    strncpy(dem + 1,"split$",6);
     dem[7] = '\0';
     while(tmp_str != NULL && strncmp(tmp_str,dem,7)){
         tmp_str = strchr(tmp_str + 1,key);
@@ -77,7 +77,7 @@ inline int get_from_father(char* parameter ,char* task_id,char key){
     }
     strncpy(task_id,parameter,strlen(parameter) - strlen(tmp_str));
     task_id[strlen(parameter) - strlen(tmp_str)] = '\0';
-    memcpy(parameter,tmp_str + 7,strlen(tmp_str + 7));
+    strncpy(parameter,tmp_str + 7,strlen(tmp_str + 7));
     parameter[strlen(tmp_str + 7)] = '\0';
     return 1;
 }
@@ -95,7 +95,7 @@ inline int split_task_key(char* parameter ,char* task_id,char key){
     }
     strncpy(task_id,parameter,strlen(parameter) - strlen(func));
     task_id[strlen(parameter) - strlen(func)] = '\0';
-    memcpy(parameter,func + 1,strlen(func + 1));
+    strncpy(parameter,func + 1,strlen(func + 1));
     parameter[strlen(func + 1)] = '\0';
     return 1;
 }
@@ -119,7 +119,7 @@ inline std::string json_str(Isolate* isolate, Local<Value> value) {
 inline bool read_finish(char* str,char key){
     char dem[8];
     dem[0] = key;
-    memcpy(dem + 1,"split$",6);
+    strncpy(dem + 1,"split$",6);
     dem[7] = '\0';
     char* tmp_str = strchr(str,key);
     while(tmp_str  != NULL){
