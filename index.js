@@ -13,7 +13,10 @@ function taskCommonFunc (key){
             callback = data;
             data = {};
         }
-        client.send(key,data,callback)
+        client.send(key,data,function(err,data){
+            callback(err,data);
+            process._tickCallback();//因为没在node的makeCallback中，所以只能手动触发tickCallback
+        })
     }
 }
 
