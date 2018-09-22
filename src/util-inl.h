@@ -55,12 +55,18 @@ inline void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t *b
     buf->len = suggested_size;
 }
 
-inline void free_write_req(uv_write_t *req,bool free_buf) {
+inline void free_write_req(uv_write_t *req) {
     write_req_t *wr = (write_req_t*) req;
-    if(free_buf){
+    if(wr->buf.len > 1){
         free(wr->buf.base);
     }
     free(wr);
+}
+
+inline void package_ret_str(uv_buf_t* buf,std::string & str){
+    char* return_params_json_string =  (char*) malloc(str.length() + 15);
+    sprintf(return_params_json_string,"%csplit$%s;split$",0x3a,str.c_str());
+    *buf = uv_buf_init(return_params_json_string,str.length() + 15);
 }
 
 inline int get_from_father(char* parameter ,char* task_id,char key){

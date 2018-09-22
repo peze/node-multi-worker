@@ -43,16 +43,15 @@ void Client::solve_data(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
             parameters[1] = json_ob.ToLocalChecked();
         }
         data_send->getCallback()->Call(context->Global(),2,parameters);
-//        delete data_send;
+        delete data_send;
         free(result);
+        free(buf->base);
     }
     if (nread < 0) {
         if (nread != UV_EOF)
             fprintf(stderr, "Read error %s\n", uv_err_name(nread));
         uv_close((uv_handle_t*) client, free_handle);
     }
-
-    free(buf->base);
 
 }
 
@@ -63,7 +62,7 @@ void Client::on_read(uv_write_t *req, int status) {
         return;
     }
     uv_read_start((uv_stream_t*) req->handle, alloc_buffer, Client::solve_data);
-    free_write_req(req,true);
+    free_write_req(req);
 }
 
 

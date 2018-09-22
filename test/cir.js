@@ -47,7 +47,7 @@ mgWorker.tasks("loop",{a:function(data){
 var worker = new mgWorker();
 
 
-worker.loop.a({
+worker.loop.b({
     length:8000
 }).then(function (data) {
     console.log(data);

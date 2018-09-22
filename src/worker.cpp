@@ -39,24 +39,7 @@ void finish_write(uv_write_t *req, int status) {
     if (status) {
         fprintf(stderr, "Write error %s\n", uv_err_name(status));
     }
-//    if(req->data != NULL){
-//        std::string* return_params_json = reinterpret_cast<std::string*>(req->data);
-//        if(return_params_json->length() < BUFF_SIZE){
-//            char return_params_json_string[BUFF_SIZE + 7];
-//            sprintf(return_params_json_string,"%s;split$",return_params_json->c_str());
-//            req->data = NULL;
-//            ((write_req_t*)req)->buf = uv_buf_init(return_params_json_string,BUFF_SIZE + 7);
-//            uv_write(req, req->handle, &(((write_req_t*)req)->buf), 1, finish_write);
-//        }else{
-//            char return_params_json_string[BUFF_SIZE];
-//            snprintf(return_params_json_string,BUFF_SIZE,"%s",return_params_json->c_str());
-//            req->data = (void*)new std::string(return_params_json->substr(BUFF_SIZE));
-//            ((write_req_t*)req)->buf = uv_buf_init(return_params_json_string,BUFF_SIZE);
-//            uv_write(req, req->handle, &(((write_req_t*)req)->buf), 1, finish_write);
-//        }
-//        return;
-//    }
-    free_write_req(req,false);
+    free_write_req(req);
 }
 
 void promise_callback(uv_timer_t *handle) {
@@ -71,9 +54,7 @@ void promise_callback(uv_timer_t *handle) {
         if(async_have_done){
             Local<Value> returnValue = promise->ToObject()->Get(String::NewFromUtf8(globalIsolate, "result_arguments"));
             std::string return_params_json = json_str(globalIsolate,returnValue);
-            char* return_params_json_string =  (char*) malloc(return_params_json.length() + 15);
-            sprintf(return_params_json_string,"%csplit$%s;split$",0x3a,return_params_json.c_str());
-            req->buf = uv_buf_init(return_params_json_string,return_params_json.length() + 15);
+            package_ret_str(&req->buf,return_params_json);
             uv_write((uv_write_t*) req, client, &req->buf, 1, finish_write);
             delete promise_deliver;
             uv_close((uv_handle_t*)handle,free_handle);
@@ -83,6 +64,7 @@ void promise_callback(uv_timer_t *handle) {
 }
 
 void begin_task(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
+    //todo：保证包的完整和有效性
     if (nread > 0) {
         write_req_t *req = (write_req_t*) malloc(sizeof(write_req_t));
         char* parameter;
@@ -109,8 +91,8 @@ void begin_task(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
                         returnValue = async_callback->Call(target,1,promise_parameters);
                     }
                     if(returnValue->IsUndefined()){
-
-                        req->buf = uv_buf_init("a",10);
+                        std::string return_params_json = "{}";
+                        package_ret_str(&req->buf,return_params_json);
                         uv_write((uv_write_t*) req, client, &req->buf, 1, finish_write);
                         break;
                     }
@@ -130,44 +112,11 @@ void begin_task(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
                         }
                     }
                     std::string return_params_json = json_str(globalIsolate,returnValue);
-//                    if(return_params_json.length() > BUFF_SIZE){
-//                        char return_params_json_string[BUFF_SIZE];
-//                        snprintf(return_params_json_string,BUFF_SIZE,"%csplit$%s",0x3a,return_params_json.c_str());
-//                        ((uv_write_t*)req)->data = (void*)new std::string(return_params_json.substr(BUFF_SIZE - 7));
-//                        req->buf = uv_buf_init(return_params_json_string,BUFF_SIZE);
-//                        uv_write((uv_write_t*) req, client, &req->buf, 1, finish_write);
-//                    }else{
-                        char* return_params_json_string =  (char*) malloc(return_params_json.length() + 15);
-                        sprintf(return_params_json_string,"%csplit$%s;split$",0x3a,return_params_json.c_str());
-                        req->buf = uv_buf_init(return_params_json_string,return_params_json.length() + 15);
-                        uv_write((uv_write_t*) req, client, &req->buf, 1, finish_write);
-//                    }
-//                    if(return_params_json.length() > BUFF_SIZE){
-//                        int nbuf = return_params_json.length() % BUFF_SIZE  ? return_params_json.length() / BUFF_SIZE + 1 : return_params_json.length() / BUFF_SIZE;
-//                        uv_buf_t* bufs = (uv_buf_t*)calloc(sizeof(uv_buf_t),nbuf);
-//                        int i = 0;
-//                        while ( i < nbuf ){
-//                            char* return_params_json_string =  (char*) malloc(BUFF_SIZE);
-//                            if(i == 0){
-//                                snprintf(return_params_json_string,BUFF_SIZE,"%csplit$%s",0x3a,return_params_json.c_str());
-//                                return_params_json = return_params_json.substr(BUFF_SIZE - 7);
-//                            }else if(i == nbuf -1){
-//                                snprintf(return_params_json_string,BUFF_SIZE,"%s;split$",return_params_json.c_str());
-//                            }else{
-//                                snprintf(return_params_json_string,BUFF_SIZE,"%s",return_params_json.c_str());
-//                                return_params_json = return_params_json.substr(BUFF_SIZE);
-//                            }
-//                            *(bufs + i) = uv_buf_init(return_params_json_string,BUFF_SIZE);
-//                            i++;
-//                        }
-//                        req->buf.base = (char*)bufs;
-//                        uv_write((uv_write_t*) req, client, bufs, nbuf, finish_write);
-//                    }else{
-//                        char* return_params_json_string =  (char*) malloc(return_params_json.length() + 15);
-//                        sprintf(return_params_json_string,"%csplit$%s;split$",0x3a,return_params_json.c_str());
-//                        req->buf = uv_buf_init(return_params_json_string,return_params_json.length() + 15);
-//                        uv_write((uv_write_t*) req, client, &req->buf, 1, finish_write);
-//                    }
+                    package_ret_str(&req->buf,return_params_json);
+//                    char* return_params_json_string =  (char*) malloc(return_params_json.length() + 15);
+//                    sprintf(return_params_json_string,"%csplit$%s;split$",0x3a,return_params_json.c_str());
+//                    req->buf = uv_buf_init(return_params_json_string,return_params_json.length() + 15);
+                    uv_write((uv_write_t*) req, client, &req->buf, 1, finish_write);
                     break;
                 }
                 if(func_val->IsObject()){
@@ -180,6 +129,9 @@ void begin_task(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
         }
         delete task_key;
         delete task_key_long;
+        free(left);
+        free(val);
+        free(buf->base);
     }
 
     if (nread < 0) {
@@ -187,8 +139,6 @@ void begin_task(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf) {
             fprintf(stderr, "Read error %s\n", uv_err_name(nread));
         uv_close((uv_handle_t*) client, free_handle);
     }
-
-    free(buf->base);
 }
 
 
@@ -204,8 +154,6 @@ void on_child_work(uv_stream_t *q, ssize_t nread, const uv_buf_t *buf) {
     uv_pipe_t *client = (uv_pipe_t*) malloc(sizeof(uv_pipe_t));
     uv_pipe_init(pipe->loop, client, 0);
     if (uv_accept(q, (uv_stream_t*) client) == 0) {
-        uv_os_fd_t fd;
-        uv_fileno((const uv_handle_t*) client, &fd);
         uv_read_start((uv_stream_t*) client, alloc_buffer, begin_task);
     }
     else {

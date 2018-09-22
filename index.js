@@ -41,16 +41,12 @@ function MgWorkers(){
         return worker;
     }
     nodeWorkers.init(function(promise){
-        // console.dir(promise);
         var pro =  promise.then(function(data){
             pro.result_arguments = arguments;
             pro.have_done = true;
         })
         pro.is_aysnc_promise = true;
         return pro;
-    },function(val){
-        var str = JSON.stringify(val);
-        return str;
     });
     init = true;
     client = new nodeWorkers.Client;
